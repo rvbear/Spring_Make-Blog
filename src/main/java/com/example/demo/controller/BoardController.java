@@ -4,6 +4,7 @@ import com.example.demo.entity.Board;
 import com.example.demo.service.BoardService;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
@@ -39,7 +40,16 @@ public class BoardController {
     @GetMapping("/board/list")
     public String boardList(Model model, @PageableDefault(page = 0, size = 10, sort = "id", direction = Sort.Direction.DESC) Pageable pageable) {
 
-        model.addAttribute("list", boardService.boardList(pageable));
+        Page<Board> list = boardService.boardList(pageable);
+
+        int nowPage = list.getPageable().getPageNumber() + 1;               // 현재 페이지
+        int startPage = Math.max(nowPage - 4, 1);                           // 블럭에서 보여줄 시작 페이지
+        int endPage = Math.min(nowPage + 5, list.getTotalPages());          // 블럭에서 보여줄 마지막 페이지
+
+        model.addAttribute("list", list);
+        model.addAttribute("nowPage", nowPage);
+        model.addAttribute("startPage", startPage);
+        model.addAttribute("endPage", endPage);
 
         return "boardlist";
     }
@@ -75,7 +85,8 @@ public class BoardController {
         Board boardTemp = boardService.boardView(id);
         boardTemp.setTitle(board.getTitle());
         boardTemp.setContent(board.getContent());
-
+        boardTemp.setFilename(board.getFilename());
+        boardTemp.setFilepath(board.getFilepath());
 
         if(file != null) boardService.boardWrite(boardTemp, file);
         else boardService.boardWrite(boardTemp, null);
