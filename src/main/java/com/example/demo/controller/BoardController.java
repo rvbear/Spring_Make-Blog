@@ -4,6 +4,9 @@ import com.example.demo.entity.Board;
 import com.example.demo.service.BoardService;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -34,9 +37,9 @@ public class BoardController {
     }
 
     @GetMapping("/board/list")
-    public String boardList(Model model) {
+    public String boardList(Model model, @PageableDefault(page = 0, size = 10, sort = "id", direction = Sort.Direction.DESC) Pageable pageable) {
 
-        model.addAttribute("list", boardService.boardList());
+        model.addAttribute("list", boardService.boardList(pageable));
 
         return "boardlist";
     }
@@ -67,13 +70,15 @@ public class BoardController {
     }
 
     @PostMapping("board/update/{id}")
-    public String boardUpdate(@PathVariable("id") Integer id, Board board, Model model, MultipartFile file) throws Exception {
+    public String boardUpdate(Model model, @PathVariable("id") Integer id, Board board, MultipartFile file) throws Exception {
 
         Board boardTemp = boardService.boardView(id);
         boardTemp.setTitle(board.getTitle());
         boardTemp.setContent(board.getContent());
 
-        boardService.boardWrite(boardTemp, file);
+
+        if(file != null) boardService.boardWrite(boardTemp, file);
+        else boardService.boardWrite(boardTemp, null);
 
         model.addAttribute("message", "글 수정이 완료되었습니다.");
         model.addAttribute("searchUrl", "/board/list");

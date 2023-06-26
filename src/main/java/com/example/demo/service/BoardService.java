@@ -3,6 +3,8 @@ package com.example.demo.service;
 import com.example.demo.entity.Board;
 import com.example.demo.repository.BoardRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -23,20 +25,26 @@ public class BoardService {
         String projectpath = System.getProperty("user.dir") + "\\src\\main\\resources\\static\\files";
 
         UUID uuid = UUID.randomUUID();
-        String fileName = uuid + "_" + file.getOriginalFilename();
+        if(file != null) {
+            String fileName = uuid + "_" + file.getOriginalFilename();
 
-        File saveFile = new File(projectpath, fileName);
-        file.transferTo(saveFile);
+            File saveFile = new File(projectpath, fileName);
+            file.transferTo(saveFile);
 
-        board.setFilename(fileName);
-        board.setFilepath("/files/" + fileName);
-
+            board.setFilename(fileName);
+            board.setFilepath("/files/" + fileName);
+        }
+        else {
+            board.setFilename(null);
+            board.setFilepath(null);
+        }
         boardRepository.save(board);
     }
 
     // 게시글 리스트 처리
-    public List<Board> boardList() {
-        return boardRepository.findAll();
+    public Page<Board> boardList(Pageable pageable) {
+
+        return boardRepository.findAll(pageable);
     }
 
     // 특정 게시글 불러오기
